@@ -1,5 +1,7 @@
 module Parser where
 
+import Data.Char (isDigit)
+
 -- | A parser for things is s a function from strings
 -- to lists of pairs of things and strings.
 
@@ -32,3 +34,13 @@ p +++ q = \input -> case parse p input of
 p >>>= f = \input -> case parse p input of
                        []         -> []
                        [(v, out)] -> parse (f v) out
+
+sat :: (Char -> Bool) -> Parser Char
+sat p = item >>>= \c ->
+        if p c then return' c else failure
+
+digit :: Parser Char
+digit = sat isDigit
+
+char :: Char -> Parser Char
+char c = sat (c==)

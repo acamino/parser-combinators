@@ -49,3 +49,31 @@ spec = do
       context "when one parser fails" $
         it "fails" $
           (item >>>= \x -> item >>>= \y -> return' (x, y)) "a" `shouldBe` []
+
+  describe "derived primitives" $ do
+    describe "sat" $ do
+      context "when the predicate is satisfied" $
+        it "parses a character" $
+          parse (sat ('a'==)) "abc" `shouldBe` [('a', "bc")]
+
+      context "when the predicate is unsatisfied" $
+        it "fails" $
+          parse (sat ('a'==)) "bc" `shouldBe` []
+
+    describe "digit" $ do
+      context "when the first character is a digit" $
+        it "succeeds" $
+          parse digit "1ab" `shouldBe` [('1', "ab")]
+
+      context "when the first character is not a digit" $
+        it "fails" $
+          parse digit "abc" `shouldBe` []
+
+    describe "char" $ do
+      context "when the first character is the given char" $
+        it "succeeds" $
+          parse (char 'a') "abc" `shouldBe` [('a', "bc")]
+
+      context "when the first character is not the given char" $
+        it "fails" $
+          parse (char 'x') "abc" `shouldBe` []
