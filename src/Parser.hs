@@ -44,3 +44,14 @@ digit = sat isDigit
 
 char :: Char -> Parser Char
 char c = sat (c==)
+
+-- | many p and many1 p, apply a parser p as many times as possible until it
+-- fails.
+
+many :: Parser a -> Parser [a]
+many p = many1 p +++ return' []
+
+many1 :: Parser a -> Parser [a]
+many1 p = p      >>>= \v  ->
+          many p >>>= \vs ->
+          return' (v:vs)

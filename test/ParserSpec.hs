@@ -77,3 +77,21 @@ spec = do
       context "when the first character is not the given char" $
         it "fails" $
           parse (char 'x') "abc" `shouldBe` []
+
+  describe "many" $ do
+    context "when the parser can succeed" $
+      it "succeeds applying the parser many times" $
+        parse (many digit) "123abc" `shouldBe` [("123", "abc")]
+
+    context "when the parser can not succeed" $
+      it "succeeds applying the parser zero times" $
+        parse (many digit) "abc"  `shouldBe` [("", "abc")]
+
+  describe "many1" $ do
+    context "when the parser can succeed" $
+      it "succeeds applying the parser many times" $
+        parse (many1 digit) "123abc" `shouldBe` [("123", "abc")]
+
+    context "when the parser can not succeed" $
+      it "fails" $
+        parse (many1 digit) "abc"  `shouldBe` []
