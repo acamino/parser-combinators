@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Monadic Parser Combinators</title>
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/ganymede.css">
+
+    <!-- Theme used for syntax highlighting of code -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+      var link = document.createElement( 'link' );
+      link.rel = 'stylesheet';
+      link.type = 'text/css';
+      link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+      document.getElementsByTagName( 'head' )[0].appendChild( link );
+    </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1>
+            <span style="color: #E91E63">Monadic</span> Parser Combinators
+          </h1>
+        </section>
+        <section data-background="#FF9800">
+          <strong style="color: #FFFFFF">@acamino</strong>
+        </section>
+        <section>
+          <h1>
+            What is a <span style="color: #4CAF50">Parser</span>?
+          </h1>
+        </section>
+        <section>
+          <section>
+            <p>A program for parsing.</p>
+          </section>
+          <section>
+            <p>
+              A computer program that breaks down text into recognized strings
+              of characters for further analysis.
+            </p>
+          </section>
+          <section>
+            <p style="color: #03A9F4">"2*3+4"</p>
+            <img data-src="img/what-is-a-parser.svg" alt="What is a parser?" />
+          </section>
+          <section>
+            <p>
+              You can think in some examples of parsers in your everyday work.
+            </p>
+          </section>
+        </section>
+        <section>
+          <h1>
+            The <span style="color: #4CAF50">Parser</span> Type
+          </h1>
+        </section>
+        <section>
+          <section>
+            <p>
+              A parser is a <span style="color: #CDDC39">function</span>.
+            </p>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              ```haskell
+              -- Parser is a function that takes a String and
+              -- returns a Tree.
+
+              type Parser = String → Tree
+              ```
+            </script>
+          </section>
+          <section>
+            <p>
+              We might need to return any <span style="color:
+              #CDDC39">unused</span> input.
+            </p>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              ```haskell
+              -- Parser is a function that takes a String and
+              -- returns a pair of Tree and String.
+
+              type Parser = String → (Tree, String)
+              ```
+            </script>
+          </section>
+          <section>
+            <p>
+              It might produce <span style="color: #CDDC39">multiple</span> results.
+            </p>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              ```haskell
+              -- Parser is a function that takes a String and
+              -- returns a list of pairs of Tree and String.
+
+              type Parser = String → [(Tree, String)]
+              ```
+            </script>
+          </section>
+          <section>
+            <p>
+              It might not produce a <span style="color: #CDDC39">Tree</span>,
+              we can generalize to a value of any type.
+            </p>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              ```haskell
+              -- Parser of things is a function that takes a
+              -- String and returns a list of pairs of things
+              -- and Strings.
+
+              type Parser a = String → [(a, String)]
+              ```
+            </script>
+          </section>
+          <section>
+            <p>A parser for things</p>
+            <p class="fragment">Is a function from strings</p>
+            <p class="fragment">To lists of pairs</p>
+            <p class="fragment">Of things and strings</p>
+          </section>
+        </section>
+        <section>
+          <h1>
+            Basic <span style="color: #FFEB3B">Parsers</span>
+          </h1>
+        </section>
+        <!-- The Success Parser -->
+        <section>
+          <section>
+            <h2>
+              The <span style="color: #CDDC39">Success</span> Parser
+            </h2>
+          </section>
+          <section>
+            <p>
+              It <span style="color: #CDDC39">always succeed</span>, returning
+              the given value without consuming any input.
+            </p>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              <span style="color: #CDDC39">return'</span>, the <span
+              style="color: #CDDC39">success</span> parser.
+              ```haskell
+              return' :: a → Parser a
+              return' v = \input → [(v, input)]
+              ```
+            </script>
+          </section>
+        </section>
+        <!--/ The Success Parser -->
+        <!-- The Failure Parser -->
+        <section>
+          <section>
+            <h2>
+              The <span style="color: #F44336">Failure</span> Parser
+            </h2>
+          </section>
+          <section>
+            <p>
+              It <span style="color: #F44336">always fails</span>.
+            </p>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              The <span style="color: #F44336">failure</span> parser.
+              ```haskell
+              failure :: Parser a
+              failure = \input → []
+              ```
+            </script>
+          </section>
+        </section>
+        <!--/ The Failure Parser -->
+        <!-- The Item Parser -->
+        <section>
+          <section>
+            <h2>
+              The <span style="color: #03A9F4">Item</span> Parser
+            </h2>
+          </section>
+          <section>
+            <p>
+              Fails when the <span style="color: #F44336">input is empty</span> or
+              <span style="color: #CDDC39">consumes the first character </span>
+              otherwise.
+            </p>
+          </section>
+          <section>
+            <ul>
+              <li>An <span style="color: #F44336">empty list</span> means failure.</li>
+              <li>A <span style="color: #CDDC39">non-empty list</span> means success.</li>
+            </ul>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              The <span style="color: #03A9F4">item</span> parser.
+              ```haskell
+              item :: Parser Char
+              item = \input → case input of
+                       []     → []
+                       (x:xs) → [(x, xs)]
+              ```
+            </script>
+          </section>
+        </section>
+        <!--/ The Item Parser -->
+        <!-- The Parse Function -->
+        <section>
+          <section>
+            <h2>The <span style="color: #FFC107">parse</span> Function</h2>
+          </section>
+          <section>
+            This function applies a <span style="color: #4CAF50">Parser</span>
+            to a String.
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              The <span style="color: #FFC107">parse</span> function.
+              ```haskell
+              parse :: Parser a → String → [(a, String)]
+              parse p input = p input
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Quiz
+
+              ```haskell
+              λ parse item ""
+              -- ?
+
+              λ parse item "abc"
+              -- ?
+
+              λ parse failure "abc"
+              -- ?
+
+              λ parse (return' 'a') "abc"
+              -- ?
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Solutions
+
+              ```haskell
+              λ parse item ""
+              []
+
+              λ parse item "abc"
+              [('a', "bc")]
+
+              λ parse failure "abc"
+              []
+
+              λ parse (return' 'a') "abc"
+              [('a', "abc")]
+              ```
+            </script>
+          </section>
+        </section>
+        <!--/ The Parse Function -->
+        <section>
+          <h1>Combinators</h1>
+        </section>
+        <!-- Choice -->
+        <section>
+          <section>
+            <h2><span style="color: #03A9F4">Choice</span></h1>
+          </section>
+          <section>
+            The combinator <code>p +++ q</code> behaves as <code>p</code> if
+            <span style="color: #CDDC39"><code>p</code> succeeds</span>,
+            <span style="color: #F44336">otherwise as <code>q</code></span>.
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Or else:
+
+              ```haskell
+              (+++) :: Parser a → Parser a → Parser a
+              p +++ q = \input → case parse p input of
+                           []         → parse q input
+                           [(v, out)] → [(v, out)]
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Quiz
+
+              ```haskell
+              λ parse (item +++ return' 'd') "abc"
+              -- ?
+
+              λ parse (failure +++ return' 'd') "abc"
+              -- ?
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Solutions
+
+              ```haskell
+              λ parse (item +++ return' 'd') "abc"
+              [('a', "bc")]
+
+              λ parse (failure +++ return' 'd') "abc"
+              [('d', "abc")]
+              ```
+            </script>
+          </section>
+        </section>
+        <!--/ Choice -->
+        <!-- Sequencing -->
+        <section>
+          <section>
+            <h2><span style="color: #2196F3">Sequencing</span></h1>
+          </section>
+          <section>
+            Parsers can be <span style="color: #CDDC39">combined</span> in a
+            single <em>composite</em> parser.
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Then:
+
+              ```haskell
+              (>>>=) :: Parser a → (a → Parser b) → Parser b
+              p >>>= f = \input → case parse p input of
+                 []         → []
+                 [(v, out)] → parse (f v) out
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              For example:
+
+              ```haskell
+              p :: Parser (Char, Char)
+              p = item >>>= \x →
+                  item >>>= \_ →
+                  item >>>= \y →
+                  return' (x, y)
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Quiz
+
+              ```haskell
+              λ parse p "abcdef"
+              -- ?
+
+              λ parse p "ab"
+              -- ?
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Solutions
+
+              ```haskell
+              λ parse p "abcdef"
+              [(('a', 'c'), "def")]
+
+              λ parse p "ab"
+              []
+              ```
+            </script>
+          </section>
+        </section>
+        <!--/ Sequencing -->
+        <section>
+          <h1>Derived Primitives</h1>
+        </section>
+        <!-- Satisfy -->
+        <section>
+          <section>
+            <h2><span style="color: #03A9F4">Satisfy</span></h1>
+          </section>
+          <section>
+            Parse a character that <span style="color: #CDDC39">satisfies</span>
+            a predicate.
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              The <span style="color: #03A9F4">sat</span> parser.
+
+              ```haskell
+              sat :: (Char → Bool) → Parser Char
+              sat p = item >>>= \x →
+                      if p x then return' x else failure
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Quiz
+
+              ```haskell
+              λ sat (=='a') "abcd"
+              -- ?
+
+              λ sat (=='a') "bcd"
+              -- ?
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Solutions
+
+              ```haskell
+              λ sat (=='a') "abcd"
+              [('a',"bcd")]
+
+              λ sat (=='a') "bcd"
+              []
+              ```
+            </script>
+          </section>
+        </section>
+        <!--/ Satisfy -->
+        <!-- digit and char -->
+        <section>
+          <section>
+            <h2>
+              <span style="color: #03A9F4">Digit</span> and <span style="color:
+                #03A9F4">Char</span>
+            </h1>
+          </section>
+          <section>
+            <p>
+              <span style="color: #03A9F4">digit</span> parses a character if it
+              is a digit.
+            </p>
+
+            <p>
+              <span style="color: #03A9F4">char</span> parses a character if it
+              is the given char.
+            </p>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              <span style="color: #03A9F4">digit</span> and <span style="color: #03A9F4">char</span> parsers.
+
+              ```haskell
+              digit :: Parser Char
+              digit = sat isDigit
+
+              char :: Char → Parser Char
+              char x = sat (==x)
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Quiz
+
+              ```haskell
+              λ parse digit "4abc"
+              -- ?
+
+              λ parse digit "abc"
+              -- ?
+
+              λ parse char 'a' "abc"
+              -- ?
+
+              λ parse char 'z' "abc"
+              -- ?
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Solutions
+
+              ```haskell
+              λ parse digit "4abc"
+              [('4',"abc")]
+
+              λ parse digit "abc"
+              []
+
+              λ parse char 'a' "abc"
+              [('a',"bc")]
+
+              λ parse char 'z' "abc"
+              []
+              ```
+            </script>
+          </section>
+        </section>
+        <!--/ digit and char -->
+        <!-- zero or more && one or more -->
+        <section>
+          <section>
+            <h2>
+              <span style="color: #03A9F4">Zero or More</span> and <span style="color:
+                #03A9F4">One or More</span>
+            </h1>
+          </section>
+          <section>
+            <p>
+              <span style="color: #03A9F4">many</span> applies a parser
+              <em>zero</em> or <em>more</em> times.
+            </p>
+
+            <p>
+              <span style="color: #03A9F4">many1</span> applies a parser
+              <em>one</em> or <em>more</em> times.
+            </p>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              <span style="color: #03A9F4">many</span> and <span style="color: #03A9F4">many1</span> parsers.
+
+              ```haskell
+              many :: Parser a → Parser [a]
+              many p = many1 p +++ return' []
+
+              many1 :: Parser a → Parser [a]
+              many1 p = p      >>>= \v  →
+                        many p >>>= \vs →
+                        return' (v:vs)
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Let's define a parser <code style="color: #03A9F4">p'</code> for lists.
+
+              ```haskell
+              p' :: Parser String
+              p' = char '[' >>>= \_ →
+                   digit    >>>= \x →
+                   many (char ',' >>>= \_ → digit) >>>= \xs →
+                   char ']' >>>= \_ →
+                   return' (x:xs)
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Quiz
+
+              ```haskell
+              λ parse p' "[1,2,3,4]"
+              -- ?
+
+              λ parse p' "[1,2,3,]"
+              -- ?
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Solutions
+
+              ```haskell
+              λ parse p' "[1,2,3,4]"
+              [("1234","")]
+
+              λ parse p' "[1,2,3,]"
+              []
+              ```
+            </script>
+          </section>
+        </section>
+        <!--/ zero or more && one or more -->
+        <!-- Arithmetic Expressions -->
+        <section>
+          <h1>
+            <span style="color: #03A9F4">Arithmetic Expressions</span>
+          </h1>
+        </section>
+        <section>
+          <section>
+            <h2>
+              <span style="color: #03A9F4">Arithmetic Expressions</span>
+            </h2>
+          </section>
+          <section>
+            <p>
+              This expressions are build up from <span style="color:
+              #03A9F4">single digits</span> and the operators of <span
+              style="color: #03A9F4">addition +</span>, <span style="color:
+              #03A9F4">multiplication *</span> and <span style="color:
+              #03A9F4">parenthesis</span>.
+            </p>
+          </section>
+          <section>
+            <p>expr   = term + expr | term</p>
+            <p class="fragment">term   = factor * term | factor</p>
+            <p class="fragment">factor = (expr) | digit</p>
+            <p class="fragment">digit  = 0 | 1 | 2 ...</p>
+          </section>
+          <section>
+            Let's simplify this grammar.
+          </section>
+          <section>
+            <p><span style="color: #607D8B">ε means empty string</span></p>
+            <p>expr   = term (+ expr | ε)</p>
+            <p class="fragment">term   = factor (* term | ε)</p>
+            <p class="fragment">factor = (expr) | digit</p>
+            <p class="fragment">digit  = 0 | 1 | 2 ...</p>
+          </section>
+          <section>
+            <img data-src="img/expression-tree.svg"
+                 alt="What is a parser?"
+                 style="width:400px;" />
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              expr = term (+ expr | ε)
+              ```haskell
+              expr :: Parser Int
+              expr = term >>>= \t →
+                     (
+                       char '+' >>>= \_ →
+                       expr     >>>= \e →
+                       return' (t + e)
+                     )
+                     +++ return' t
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              term = factor (* term | ε)
+              ```haskell
+              term :: Parser Int
+              term = factor >>>= \f →
+                     (
+                       char '*' >>>= \_ →
+                       term     >>>= \t →
+                       return' (f * t)
+                     )
+                     +++ return' f
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              factor = (expr) | digit
+              ```haskell
+              factor :: Parser Int
+              factor =
+                (
+                  char '(' >>>= \_ →
+                  expr     >>>= \e →
+                  char ')' >>>= \_ →
+                  return' e
+                )
+                +++ (
+                      digit >>>= \d →
+                      return' (digitToInt d)
+                    )
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              eval
+              ```haskell
+              eval :: String → Int
+              eval xs = case parse expr xs of
+                   [(n, [])]  → n
+                   [(_, out)] → error ("unused input " ++ out)
+                   []         → error "invalid input"
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Quiz
+
+              ```haskell
+              λ eval "1+2"
+              -- ?
+
+              λ eval "1+3*3"
+              -- ?
+
+              λ eval "(1+3)*3"
+              -- ?
+              ```
+            </script>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              Solutions
+
+              ```haskell
+              λ eval "1+2"
+              3
+
+              λ eval "1+3*3"
+              10
+
+              λ eval "(1+3)*3"
+              12
+              ```
+            </script>
+          </section>
+        </section>
+        <!--/ Arithmetic Expressions -->
+        <!-- Monad -->
+        <section>
+          <h1>
+            <span style="color: #4CAF50">Monad</span>
+          </h1>
+        </section>
+        <section>
+          <section>
+            <h2>
+              <span style="color: #4CAF50">Monad</span>
+            </h2>
+          </section>
+          <section>
+            <p>
+              A monad <code style="color: #4CAF50">m a</code> is an abstract
+              data type <code style="color: #4CAF50">m</code> of computations
+              delivering a value of type <code style="color: #4CAF50">a</code>.
+            </p>
+          </section>
+          <section>
+            <p>The monad is represented in terms of triple:</p>
+            <p>
+              (<code style="color: #4CAF50">m a</code>, <code style="color:
+              #CDDC39">return</code>, <code style="color:
+              #03A9F4">>>=</code>)
+            </p>
+            <p class="fragment">
+              <code style="color: #4CAF50">m a</code> is a type constructor.
+            </p>
+            <p class="fragment">
+              <code style="color: #CDDC39">return</code> is the computation for
+              returning a value of type.
+            </p>
+            <p class="fragment">
+              <code style="color: #03A9F4">>>=</code> is the sequential
+              composition.
+            </p>
+          </section>
+          <section data-markdown>
+            <script type="text/template">
+              <span style="color: #CDDC39">Can you see it?</span>
+
+              ```haskell
+              -- Monad
+              return :: a → m a
+              (>>=)  :: m a → (a → m b) → m b
+
+              -- Parser
+              return' :: a → Parser a
+              (>>>=)  :: Parser a → (a → Parser b) → Parser b
+              ```
+            </script>
+          </section>
+        </section>
+        <!--/ Monad -->
+        <section>
+          <h2>
+            <span style="color: #CDDC39;">Inspiration</span>
+          </h2>
+          <ol>
+            <li>
+              Functional Parsers in <a href="http://www.amazon.com/Programming-Haskell-Graham-Hutton/dp/0521692695">Programming
+              in Haskell</a>.
+            </li>
+            <li>
+              <a href="http://www.cs.nott.ac.uk/~pszgmh/pearl.pdf">Monadic Parser in
+              Haskell</a>.
+            </li>
+            <li>
+              <a href="http://www.cs.nott.ac.uk/~pszgmh/monparsing.pdf">Monadic
+              Parser Combinators</a>.
+            </li>
+          </ol>
+        </section>
+        <section data-background="#009688">
+          <h1>Q&A</h1>
+        </section>
+        <section data-background="#3F51B5">
+          <h1>Thanks!</h1>
+          <a href="https://github.com/acamino/parser-combinators">
+            https://github.com/acamino/parser-combinators
+          </a>
+        </section>
+      </div>
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+    // More info https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+      history: true,
+
+      // More info https://github.com/hakimel/reveal.js#dependencies
+      dependencies: [
+        { src: 'plugin/markdown/marked.js' },
+        { src: 'plugin/markdown/markdown.js' },
+        { src: 'plugin/notes/notes.js', async: true },
+        { src: 'plugin/zoom-js/zoom.js', async: true },
+        { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+      ]
+    });
+    </script>
+  </body>
+</html>
