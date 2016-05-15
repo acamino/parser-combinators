@@ -1,6 +1,7 @@
 module ArithmeticExpr where
 
 import Data.Char (digitToInt)
+
 import Parser ((>>>=), (+++), char, return', parse, digit, Parser)
 
 -- | Grammar for arithmetic expressions.

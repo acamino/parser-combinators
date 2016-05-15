@@ -2,6 +2,7 @@ module ParserSpec where
 
 import Test.Hspec
 import Test.Hspec.QuickCheck
+
 import Parser
 
 spec :: Spec
