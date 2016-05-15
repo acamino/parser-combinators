@@ -15,3 +15,6 @@ item :: Parser Char
 item = \item -> case item of
                   []     -> []
                   (x:xs) -> [(x, xs)]
+
+parse :: Parser a -> String -> [(a, String)]
+parse p input = p input

@@ -24,3 +24,8 @@ spec = do
       context "when the input string is not empty" $
         it "fails" $
           item "" `shouldBe` []
+
+  describe "parse" $ do
+    it "applies a parser to the input string" $ do
+      parse item          "abc" `shouldBe` [('a', "bc")]
+      parse (return' 'a') "abc" `shouldBe` [('a', "abc")]
