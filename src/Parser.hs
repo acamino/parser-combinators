@@ -55,3 +55,12 @@ many1 :: Parser a -> Parser [a]
 many1 p = p      >>>= \v  ->
           many p >>>= \vs ->
           return' (v:vs)
+
+-- | Parser for lists.
+
+p :: Parser String
+p = char '[' >>>= \_ ->
+    digit    >>>= \x ->
+    many (char ',' >>>= \_ -> digit) >>>= \xs ->
+    char ']' >>>= \_ ->
+    return' (x:xs)

@@ -96,3 +96,13 @@ spec = do
     context "when the parser can not succeed" $
       it "fails" $
         parse (many1 digit) "abc"  `shouldBe` []
+
+  describe "parser for lists" $
+    describe "p" $ do
+      context "when the input string contains a list" $
+        it "succeeds" $
+          parse p "[1,2,3]" `shouldBe` [("123", "")]
+
+      context "when the input string does not contain a list" $
+        it "fails" $
+          parse p "abc" `shouldBe` []
