@@ -2,7 +2,7 @@ module ArithmeticExpr where
 
 import Data.Char (digitToInt)
 
-import Parser ((>>>=), (+++), char, return', parse, digit, Parser)
+import Parser ( (+++), char, parse, digit, Parser )
 
 -- | Grammar for arithmetic expressions.
 --
@@ -16,40 +16,32 @@ import Parser ((>>>=), (+++), char, return', parse, digit, Parser)
 -- expr = term (+ expr | ε)
 
 expr :: Parser Int
-expr = term >>>= \t ->
-       (
-         char '+' >>>= \_ ->
-         expr     >>>= \e ->
-         return' (t + e)
-       )
-       +++ return' t
+expr = do t <- term
+          do char '+'
+             e <- expr
+             return (t + e)
+           +++ return t
 
 -- | Parser for terms.
 -- term = factor (* term | ε)
 
 term :: Parser Int
-term = factor >>>= \f ->
-       (
-         char '*' >>>= \_ ->
-         term     >>>= \t ->
-         return' (f * t)
-       )
-       +++ return' f
+term = do f <- factor
+          do char '*'
+             t <- term
+             return (f * t)
+           +++ return f
 
 -- | Parser for factors.
 -- factor = (expr) | digit
 
 factor :: Parser Int
-factor = (
-           char '(' >>>= \_ ->
-           expr     >>>= \e ->
-           char ')' >>>= \_ ->
-           return' e
-         )
-         +++ (
-               digit >>>= \d ->
-               return' (digitToInt d)
-             )
+factor = do char '('
+            e <- expr
+            char ')'
+            return e
+          +++ do d <- digit
+                 return (digitToInt d)
 
 eval :: String -> Int
 eval xs = case parse expr xs of

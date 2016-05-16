@@ -6,7 +6,7 @@ import Test.Hspec
 import ArithmeticExpr
 
 spec :: Spec
-spec = do
+spec =
   describe "eval" $ do
     context "when the input is well-structured" $
       it "calculates the result" $ do
@@ -14,9 +14,9 @@ spec = do
         eval "(2+3)*4" `shouldBe` 20
 
     context "when the input can not be consumed completely" $
-      it "throws an error with the unused input" $ do
+      it "throws an error with the unused input" $
         evaluate (eval "2+3+") `shouldThrow` errorCall "unused input +"
 
     context "when the input is invalid" $
-      it "throws an error with the invalid input" $ do
+      it "throws an error with the invalid input" $
         evaluate (eval "abcd2+3") `shouldThrow` errorCall "invalid input"

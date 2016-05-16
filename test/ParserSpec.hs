@@ -8,48 +8,47 @@ import Parser
 spec :: Spec
 spec = do
   describe "primitive parsers" $ do
-    describe "return'" $
+    describe "return" $
       prop "succeeds without consuming any of the input string" $
-        \x xs -> return' x xs `shouldBe` ([(x, xs)] :: [(Char, String)])
+        \x xs -> parse (return x) xs `shouldBe` ([(x, xs)] :: [(Char, String)])
 
     describe "failure" $
       prop "always fails" $
-        \xs -> (failure xs :: [(Char, String)]) `shouldBe` []
+        \xs -> (parse failure xs :: [(Char, String)]) `shouldBe` []
 
     describe "item" $ do
       context "when the input string is not empty" $
         it "succeeds" $ do
-          item "a"   `shouldBe` [('a', "")]
-          item "abc" `shouldBe` [('a', "bc")]
+          parse item "a"   `shouldBe` [('a', "")]
+          parse item "abc" `shouldBe` [('a', "bc")]
 
       context "when the input string is not empty" $
         it "fails" $
-          item "" `shouldBe` []
+          parse item "" `shouldBe` []
 
   describe "parse" $
     it "applies a parser to the input string" $ do
-      parse item          "abc" `shouldBe` [('a', "bc")]
-      parse (return' 'a') "abc" `shouldBe` [('a', "abc")]
+      parse item         "abc" `shouldBe` [('a', "bc")]
+      parse (return 'a') "abc" `shouldBe` [('a', "abc")]
 
   describe "combinators" $ do
     describe "p +++ q" $ do
       context "when p succeeds" $
         it "behaves like p" $
-          parse (item +++ return' 'd') "abc" `shouldBe` [('a', "bc")]
+          parse (item +++ return 'd') "abc" `shouldBe` [('a', "bc")]
 
       context "when p fails" $
         it "behaves like q" $
-          parse (failure +++ return' 'd') "abc" `shouldBe` [('d', "abc")]
+          parse (failure +++ return 'd') "abc" `shouldBe` [('d', "abc")]
 
-    describe "p >>>= f" $ do
+    describe "p >>= f" $ do
       context "when both parsers succeed" $
         it "sequences two parsers" $
-          (item >>>= \x -> item >>>= \y -> return' (x, y)) "abc"
+          parse (item >>= \x -> item >>= \y -> return (x, y)) "abc"
             `shouldBe` [(('a', 'b'), "c")]
-
       context "when one parser fails" $
         it "fails" $
-          (item >>>= \x -> item >>>= \y -> return' (x, y)) "a" `shouldBe` []
+          parse (item >>= \x -> item >>= \y -> return (x, y)) "a" `shouldBe` []
 
   describe "derived primitives" $ do
     describe "sat" $ do
@@ -79,14 +78,14 @@ spec = do
         it "fails" $
           parse (char 'x') "abc" `shouldBe` []
 
-  describe "many" $ do
+  describe "many'" $ do
     context "when the parser can succeed" $
       it "succeeds applying the parser many times" $
-        parse (many digit) "123abc" `shouldBe` [("123", "abc")]
+        parse (many' digit) "123abc" `shouldBe` [("123", "abc")]
 
     context "when the parser can not succeed" $
       it "succeeds applying the parser zero times" $
-        parse (many digit) "abc"  `shouldBe` [("", "abc")]
+        parse (many' digit) "abc"  `shouldBe` [("", "abc")]
 
   describe "many1" $ do
     context "when the parser can succeed" $
