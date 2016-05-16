@@ -1,8 +1,8 @@
 module ArithmeticExpr where
 
-import Data.Char (digitToInt)
+import Data.Char ( digitToInt )
 
-import Parser ( (+++), char, parse, digit, Parser )
+import Parser    ( (+++), char, parse, digit, Parser )
 
 -- | Grammar for arithmetic expressions.
 --

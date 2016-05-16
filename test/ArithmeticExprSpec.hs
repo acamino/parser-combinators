@@ -1,6 +1,6 @@
 module ArithmeticExprSpec where
 
-import Control.Exception (evaluate)
+import Control.Exception ( evaluate )
 import Test.Hspec
 
 import ArithmeticExpr
