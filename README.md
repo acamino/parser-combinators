@@ -1,5 +1,5 @@
 <a href="https://www.haskell.org">
-  <img src="http://fieldstrength.org/images/haskell-logo.svg" alt="Haskell" align="right"  width="180" />
+  <img src="http://fieldstrength.org/images/haskell-logo.svg" alt="Haskell" align="right"  width="134" />
 </a>
 
 # Monadic Parser Combinators
@@ -8,7 +8,7 @@
 
 This repository is inspired in the chapter 8 of [Programming in Haskell](http://www.cs.nott.ac.uk/~pszgmh/book.html) book by Graham Hutton.
 
-See the presentation [here](http://acamino.github.io/parser-combinators/#/).
+To check out the presentation please click [here](http://acamino.github.io/parser-combinators/#/).
 
 ## What is Covered?
 
@@ -175,6 +175,7 @@ eval xs = case parse expr xs of
             []         -> error "invalid input"
 ```
 
-## Author
+## Licence
 
-Agustin Camino
+The code in this repository is licensed under the terms of the [MIT License](http://www.opensource.org/licenses/mit-license.html).
+Please see the [LICENSE](LICENSE) file for details.
