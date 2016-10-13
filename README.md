@@ -204,6 +204,16 @@ eval xs = case parse expr xs of
    $ stack ghci
    ```
 
+## Issues & Support
+
+Please [file tickets](https://github.com/acamino/parser-combinators/issues) for
+bug or problems.
+
+## Contributing
+
+Edits and enhancements are welcome. Just fork the repository, make your changes
+and send me a pull request.
+
 ## Licence
 
 The code in this repository is licensed under the terms of the
