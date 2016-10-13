@@ -1,5 +1,5 @@
 <a href="https://www.haskell.org">
-  <img src="http://fieldstrength.org/images/haskell-logo.svg" alt="Haskell" align="right"  width="134" />
+  <img src="http://fieldstrength.org/images/haskell-logo.svg" alt="Haskell" align="right"  width="120" />
 </a>
 
 # Monadic Parser Combinators
@@ -175,7 +175,37 @@ eval xs = case parse expr xs of
             []         -> error "invalid input"
 ```
 
+# Local Development
+
+1. First clone this repository and `cd` into it.
+
+   ```bash
+   $ git clone git://github.com/acamino/parser-combinators.git
+   $ cd parser-combinators
+   ```
+
+1. Install [Stack](https://docs.haskellstack.org/en/stable/README/).
+
+1. Get the appropriate GHC for the project.
+
+   ```bash
+   $ stack setup
+   ```
+
+1. Make sure the tests succeed.
+
+   ```bash
+   $ stack test
+   ```
+
+1. If you want to launch a REPL and have fun with this parser.
+
+   ```bash
+   $ stack ghci
+   ```
+
 ## Licence
 
-The code in this repository is licensed under the terms of the [MIT License](http://www.opensource.org/licenses/mit-license.html).
+The code in this repository is licensed under the terms of the
+[MIT License](http://www.opensource.org/licenses/mit-license.html).
 Please see the [LICENSE](LICENSE) file for details.
