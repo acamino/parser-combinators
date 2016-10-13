@@ -175,7 +175,7 @@ eval xs = case parse expr xs of
             []         -> error "invalid input"
 ```
 
-# Local Development
+## Local Development
 
 1. First clone this repository and `cd` into it.
 
