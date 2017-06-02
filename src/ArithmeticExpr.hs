@@ -1,9 +1,3 @@
-module ArithmeticExpr where
-
-import Data.Char ( digitToInt )
-
-import Parser    ( (+++), char, parse, digit, Parser )
-
 -- | Grammar for arithmetic expressions.
 --
 -- ε means empty string
@@ -12,36 +6,61 @@ import Parser    ( (+++), char, parse, digit, Parser )
 -- factor = (expr) | digit
 -- digit  = 0 | 1 | 2 ...
 
+module ArithmeticExpr
+  ( eval
+  )
+where
+
+import Data.Char (digitToInt)
+import Parser    (Parser, char, parse, digit, (+++))
+
+
 -- | Parser for expressions.
 -- expr = term (+ expr | ε)
 
 expr :: Parser Int
-expr = do t <- term
-          do char '+'
-             e <- expr
-             return (t + e)
-           +++ return t
+expr = do
+  t <- term
+  addExprTo t +++ return t
+  where
+    addExprTo t = do
+      char '+'
+      e <- expr
+      return (t + e)
+
 
 -- | Parser for terms.
 -- term = factor (* term | ε)
 
 term :: Parser Int
-term = do f <- factor
-          do char '*'
-             t <- term
-             return (f * t)
-           +++ return f
+term = do
+  f <- factor
+  multTermWith f +++ return f
+  where
+    multTermWith f = do
+      char '*'
+      t <- term
+      return (f * t)
+
 
 -- | Parser for factors.
 -- factor = (expr) | digit
 
 factor :: Parser Int
-factor = do char '('
-            e <- expr
-            char ')'
-            return e
-          +++ do d <- digit
-                 return (digitToInt d)
+factor = do
+  expr' +++ digit'
+    where
+      expr' = do
+        char '('
+        e <- expr
+        char ')'
+        return e
+      digit' = do
+        d <- digit
+        return (digitToInt d)
+
+
+-- | Simple arithmetic expressions evaluator.
 
 eval :: String -> Int
 eval xs = case parse expr xs of

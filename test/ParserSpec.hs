@@ -97,11 +97,11 @@ spec = do
         parse (many1 digit) "abc"  `shouldBe` []
 
   describe "parser for lists" $
-    describe "p" $ do
+    describe "lists" $ do
       context "when the input string contains a list" $
         it "succeeds" $
-          parse p "[1,2,3]" `shouldBe` [("123", "")]
+          parse lists "[1,2,3]" `shouldBe` [("123", "")]
 
       context "when the input string does not contain a list" $
         it "fails" $
-          parse p "abc" `shouldBe` []
+          parse lists "abc" `shouldBe` []
