@@ -30,7 +30,7 @@
           </h1>
         </section>
         <section data-background="#FF9800">
-          <strong style="color: #FFFFFF">@acamino</strong>
+          <strong style="color: #FFFFFF">@acaminoe</strong>
         </section>
         <section>
           <h1>
@@ -153,11 +153,11 @@
           </section>
           <section data-markdown>
             <script type="text/template">
-              <span style="color: #CDDC39">return'</span>, the <span
+              <span style="color: #CDDC39">return</span>, the <span
               style="color: #CDDC39">success</span> parser.
               ```haskell
-              return' :: a → Parser a
-              return' v = \input → [(v, input)]
+              return :: a → Parser a
+              return v = \input → [(v, input)]
               ```
             </script>
           </section>
@@ -344,8 +344,8 @@
               Then:
 
               ```haskell
-              (>>>=) :: Parser a → (a → Parser b) → Parser b
-              p >>>= f = \input → case parse p input of
+              (>>=) :: Parser a → (a → Parser b) → Parser b
+              p >>= f = \input → case parse p input of
                  []         → []
                  [(v, out)] → parse (f v) out
               ```
@@ -357,10 +357,11 @@
 
               ```haskell
               p :: Parser (Char, Char)
-              p = item >>>= \x →
-                  item >>>= \_ →
-                  item >>>= \y →
-                  return' (x, y)
+              p = do
+                x <- item
+                item
+                y <- item
+                return (x, y)
               ```
             </script>
           </section>
@@ -409,9 +410,12 @@
               The <span style="color: #03A9F4">sat</span> parser.
 
               ```haskell
-              sat :: (Char → Bool) → Parser Char
-              sat p = item >>>= \x →
-                      if p x then return' x else failure
+              sat :: (Char -> Bool) -> Parser Char
+              sat p = do
+                c <- item
+                if p c
+                   then return c
+                   else failure
               ```
             </script>
           </section>
@@ -433,10 +437,10 @@
               Solutions
 
               ```haskell
-              λ sat (=='a') "abcd"
+              λ sat (== 'a') "abcd"
               [('a',"bcd")]
 
-              λ sat (=='a') "bcd"
+              λ sat (== 'a') "bcd"
               []
               ```
             </script>
@@ -470,8 +474,8 @@
               digit :: Parser Char
               digit = sat isDigit
 
-              char :: Char → Parser Char
-              char x = sat (==x)
+              char :: Char -> Parser Char
+              char c = sat (c ==)
               ```
             </script>
           </section>
@@ -539,27 +543,29 @@
               <span style="color: #03A9F4">many</span> and <span style="color: #03A9F4">many1</span> parsers.
 
               ```haskell
-              many :: Parser a → Parser [a]
-              many p = many1 p +++ return' []
+              many' :: Parser a -> Parser [a]
+              many' p = many1 p +++ return []
 
-              many1 :: Parser a → Parser [a]
-              many1 p = p      >>>= \v  →
-                        many p >>>= \vs →
-                        return' (v:vs)
+              many1 :: Parser a -> Parser [a]
+              many1 p = do
+                v  <- p
+                vs <- many' p
+                return (v:vs)
               ```
             </script>
           </section>
           <section data-markdown>
             <script type="text/template">
-              Let's define a parser <code style="color: #03A9F4">p'</code> for lists.
+              Let's define a parser <code style="color: #03A9F4">lists</code> for lists.
 
               ```haskell
-              p' :: Parser String
-              p' = char '[' >>>= \_ →
-                   digit    >>>= \x →
-                   many (char ',' >>>= \_ → digit) >>>= \xs →
-                   char ']' >>>= \_ →
-                   return' (x:xs)
+              lists :: Parser String
+              lists = do
+                void $ char '['
+                x  <- digit
+                xs <- many' $ char ',' >> digit
+                void $ char ']'
+                return (x:xs)
               ```
             </script>
           </section>
@@ -568,10 +574,10 @@
               Quiz
 
               ```haskell
-              λ parse p' "[1,2,3,4]"
+              λ parse lists "[1,2,3,4]"
               -- ?
 
-              λ parse p' "[1,2,3,]"
+              λ parse lists "[1,2,3,]"
               -- ?
               ```
             </script>
@@ -581,10 +587,10 @@
               Solutions
 
               ```haskell
-              λ parse p' "[1,2,3,4]"
+              λ parse lists "[1,2,3,4]"
               [("1234","")]
 
-              λ parse p' "[1,2,3,]"
+              λ parse lists "[1,2,3,]"
               []
               ```
             </script>
@@ -635,50 +641,49 @@
           </section>
           <section data-markdown>
             <script type="text/template">
-              expr = term (+ expr | ε)
               ```haskell
               expr :: Parser Int
-              expr = term >>>= \t →
-                     (
-                       char '+' >>>= \_ →
-                       expr     >>>= \e →
-                       return' (t + e)
-                     )
-                     +++ return' t
+              expr = do
+                t <- term
+                addExprTo t +++ return t
+                where
+                  addExprTo t = do
+                    char '+'
+                    e <- expr
+                    return (t + e)
               ```
             </script>
           </section>
           <section data-markdown>
             <script type="text/template">
-              term = factor (* term | ε)
               ```haskell
               term :: Parser Int
-              term = factor >>>= \f →
-                     (
-                       char '*' >>>= \_ →
-                       term     >>>= \t →
-                       return' (f * t)
-                     )
-                     +++ return' f
+              term = do
+                f <- factor
+                multTermWith f +++ return f
+                where
+                  multTermWith f = do
+                    char '*'
+                    t <- term
+                    return (f * t)
               ```
             </script>
           </section>
           <section data-markdown>
             <script type="text/template">
-              factor = (expr) | digit
               ```haskell
               factor :: Parser Int
-              factor =
-                (
-                  char '(' >>>= \_ →
-                  expr     >>>= \e →
-                  char ')' >>>= \_ →
-                  return' e
-                )
-                +++ (
-                      digit >>>= \d →
-                      return' (digitToInt d)
-                    )
+              factor = do
+                expr' +++ digit'
+                  where
+                    expr' = do
+                      char '('
+                      e <- expr
+                      char ')'
+                      return e
+                    digit' = do
+                      d <- digit
+                      return (digitToInt d)
               ```
             </script>
           </section>
@@ -748,7 +753,7 @@
             </p>
           </section>
           <section>
-            <p>The monad is represented in terms of triple:</p>
+            <p>The monad is represented in terms of triplet:</p>
             <p>
               (<code style="color: #4CAF50">m a</code>, <code style="color:
               #CDDC39">return</code>, <code style="color:
@@ -776,8 +781,8 @@
               (>>=)  :: m a → (a → m b) → m b
 
               -- Parser
-              return' :: a → Parser a
-              (>>>=)  :: Parser a → (a → Parser b) → Parser b
+              return :: a → Parser a
+              (>>=)  :: Parser a → (a → Parser b) → Parser b
               ```
             </script>
           </section>
