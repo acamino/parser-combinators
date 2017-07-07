@@ -6,18 +6,22 @@
 
 [![Build Status](https://travis-ci.org/acamino/parser-combinators.svg?branch=master)](https://travis-ci.org/acamino/parser-combinators)
 
-This repository is inspired in the chapter 8 of [Programming in Haskell](http://www.cs.nott.ac.uk/~pszgmh/book.html) book by Graham Hutton.
+This repository contains the support material for a presentation I made about
+"monadic parser combinators". I took the key concepts from the chapter 8 of the
+book [Programming in Haskell](http://www.cs.nott.ac.uk/~pszgmh/book.html) book
+by Graham Hutton.
 
-To check out the presentation please click [here](http://acamino.github.io/parser-combinators/#/).
+If you want to check out the slides of the aforementioned presentation, plase
+click [here](http://acamino.github.io/parser-combinators/#/).
 
 ## What is Covered?
 
 ### Parser Type
 
-_A parser for things_  
-_Is a function from strings_  
-_To lists of pairs_  
-_Of things and strings_
+> _A parser for things_  
+> _Is a function from strings_  
+> _To lists of pairs_  
+> _Of things and strings_
 
 ```haskell
 type Parser a = String -> [(a, String)]
@@ -27,8 +31,8 @@ type Parser a = String -> [(a, String)]
 The **success** parser.
 
 ```haskell
-return' :: a -> Parser a
-return' v = \input -> [(v, input)]
+return :: a -> Parser a
+return v = \input -> [(v, input)]
 ```
 
 The **failure** parser.
@@ -57,11 +61,11 @@ p +++ q = \input -> case parse p input of
                      [(v, out)] -> [(v, out)]
 ```
 
-**Sequencing**. `>>>=` can be read as "then".
+**Sequencing**. `>>=` can be read as "then" or even better, "bind".
 
 ```haskell
-(>>>=) :: Parser a -> (a -> Parser b) -> Parser b
-p >>>= f = \input -> case parse p input of
+(>>=) :: Parser a -> (a -> Parser b) -> Parser b
+p >>= f = \input -> case parse p input of
                       []         -> []
                       [(v, out)] -> parse (f v) out
 ```
@@ -72,8 +76,11 @@ p >>>= f = \input -> case parse p input of
 
 ```haskell
 sat :: (Char -> Bool) -> Parser Char
-sat p = item >>>= \x ->
-        if p x then return' x else failure
+sat p = do
+  c <- item
+  if p c
+     then return c
+     else failure
 ```
 
 `digit`. Parse a character if it is a digit.
@@ -89,20 +96,22 @@ Keep in mind that [`isDigit`](http://hackage.haskell.org/package/base-4.8.2.0/do
 
 ```haskell
 char :: Char -> Parser Char
-char x = sat (==x)
+char c = sat (c ==)
 ```
 
 `many`. Apply a parser zero or more times.  
 `many1`. Apply a parser one or more times
 
 ```haskell
-many :: Parser a -> Parser [a]
-many p = many1 p +++ return' []
+many' :: Parser a -> Parser [a]
+many' p = many1 p +++ return []
+
 
 many1 :: Parser a -> Parser [a]
-many1 p = p      >>>= \v  ->
-          many p >>>= \vs ->
-          return' (v:vs)
+many1 p = do
+  v  <- p
+  vs <- many' p
+  return (v:vs)
 ```
 
 ### Arithmetic Expressions
@@ -126,43 +135,45 @@ Then, the grammar is defined as follows:
 
    ```haskell
    expr :: Parser Int
-   expr = term >>>= \t ->
-          (
-            char '+' >>>= \_ ->
-            expr     >>>= \e ->
-            return' (t + e)
-          )
-          +++ return' t
+   expr = do
+     t <- term
+     addExprTo t +++ return t
+     where
+       addExprTo t = do
+         char '+'
+         e <- expr
+         return (t + e)
    ```
 
 1. `term`
 
    ```haskell
    term :: Parser Int
-   term = factor >>>= \f ->
-          (
-            char '*' >>>= \_ ->
-            term     >>>= \t ->
-            return' (f * t)
-          )
-          +++ return' f
+   term = do
+     f <- factor
+     multTermWith f +++ return f
+     where
+       multTermWith f = do
+         char '*'
+         t <- term
+         return (f * t)
    ```
 
 3. `factor`
 
    ```haskell
    factor :: Parser Int
-   factor =
-     (
-       char '(' >>>= \_ ->
-       expr     >>>= \e ->
-       char ')' >>>= \_ ->
-       return' e
-     )
-     +++ (
-           digit >>>= \d ->
-           return' (digitToInt d)
-         )
+   factor = do
+     expr' +++ digit'
+       where
+         expr' = do
+           char '('
+           e <- expr
+           char ')'
+           return e
+         digit' = do
+           d <- digit
+           return (digitToInt d)
    ```
 
 `eval` evaluates a given expression.
@@ -177,11 +188,13 @@ eval xs = case parse expr xs of
 
 ## Local Development
 
-1. First clone this repository and `cd` into it.
+1. Fork the project [on GitHub](https://github.com/acamino/parser-combinators)
+   and clone your fork locally.
 
    ```bash
-   $ git clone git://github.com/acamino/parser-combinators.git
+   $ git clone git://github.com/username/parser-combinators.git
    $ cd parser-combinators
+   $ git remote add upstream https://github.com/acamino/parser-combinators.git
    ```
 
 1. Install [Stack](https://docs.haskellstack.org/en/stable/README/).
@@ -201,7 +214,7 @@ eval xs = case parse expr xs of
 1. If you want to launch a REPL and have fun with this parser.
 
    ```bash
-   $ stack ghci
+   $ stack repl
    ```
 
 ## Issues & Support
@@ -217,5 +230,5 @@ and send me a pull request.
 ## Licence
 
 The code in this repository is licensed under the terms of the
-[MIT License](http://www.opensource.org/licenses/mit-license.html).
+[MIT License](http://www.opensource.org/licenses/mit-license.html).  
 Please see the [LICENSE](LICENSE) file for details.
