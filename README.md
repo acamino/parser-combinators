@@ -1,9 +1,6 @@
-<a href="https://www.haskell.org">
-  <img src="http://fieldstrength.org/images/haskell-logo.svg" alt="Haskell" align="right"  width="120" />
-</a>
+<img src="https://dl.dropboxusercontent.com/s/1ihq4owuftighi3/parsers-combinators.png" alt="Parser Combinators" />
 
 # Monadic Parser Combinators
-
 [![Build Status](https://travis-ci.org/acamino/parser-combinators.svg?branch=master)](https://travis-ci.org/acamino/parser-combinators)
 
 This repository contains the support material for a presentation I made about
