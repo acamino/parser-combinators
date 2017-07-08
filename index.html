@@ -543,13 +543,13 @@
               <span style="color: #03A9F4">many</span> and <span style="color: #03A9F4">many1</span> parsers.
 
               ```haskell
-              many' :: Parser a -> Parser [a]
-              many' p = many1 p +++ return []
+              many :: Parser a -> Parser [a]
+              many p = many1 p +++ return []
 
               many1 :: Parser a -> Parser [a]
               many1 p = do
                 v  <- p
-                vs <- many' p
+                vs <- many p
                 return (v:vs)
               ```
             </script>
@@ -563,7 +563,7 @@
               lists = do
                 void $ char '['
                 x  <- digit
-                xs <- many' $ char ',' >> digit
+                xs <- many $ char ',' >> digit
                 void $ char ']'
                 return (x:xs)
               ```
