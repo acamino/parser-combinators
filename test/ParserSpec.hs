@@ -1,9 +1,9 @@
 module ParserSpec where
 
-import Test.Hspec
-import Test.Hspec.QuickCheck
+import           Test.Hspec
+import           Test.Hspec.QuickCheck
 
-import Parser
+import           Parser
 
 spec :: Spec
 spec = do
@@ -78,14 +78,14 @@ spec = do
         it "fails" $
           parse (char 'x') "abc" `shouldBe` []
 
-  describe "many'" $ do
+  describe "many" $ do
     context "when the parser can succeed" $
       it "succeeds applying the parser many times" $
-        parse (many' digit) "123abc" `shouldBe` [("123", "abc")]
+        parse (many digit) "123abc" `shouldBe` [("123", "abc")]
 
     context "when the parser can not succeed" $
       it "succeeds applying the parser zero times" $
-        parse (many' digit) "abc"  `shouldBe` [("", "abc")]
+        parse (many digit) "abc"  `shouldBe` [("", "abc")]
 
   describe "many1" $ do
     context "when the parser can succeed" $

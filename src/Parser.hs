@@ -7,7 +7,7 @@ module Parser
   , failure
   , item
   , lists
-  , many'
+  , many
   , many1
   , parse
   , return
@@ -16,9 +16,9 @@ module Parser
 
  where
 
-import Control.Applicative (Applicative(..), Alternative(..))
-import Control.Monad       (ap, liftM, void, MonadPlus(..))
-import Data.Char           (isDigit)
+import           Control.Applicative hiding (many)
+import           Control.Monad
+import           Data.Char           (isDigit)
 
 infixr 5 +++
 
@@ -28,19 +28,17 @@ infixr 5 +++
 
 newtype Parser a = Parser (String -> [(a, String)])
 
-
 instance Functor Parser where
   fmap = liftM
-
 
 instance Applicative Parser where
   pure  = return
   (<*>) = ap
 
-
 instance Alternative Parser where
   (<|>) = mplus
   empty = mzero
+
 
 -- | The Monad instance for parsers.
 
@@ -51,7 +49,6 @@ instance Monad Parser where
       []         -> []
       [(v, out)] -> parse (f v) out)
   p >> f   = p >>= \_ -> f
-
 
 instance MonadPlus Parser where
   mzero       = Parser (const [])
@@ -99,14 +96,14 @@ char c = sat (c ==)
 -- | many p and many1 p, apply a parser p as many times as possible until it
 -- fails.
 
-many' :: Parser a -> Parser [a]
-many' p = many1 p +++ return []
+many :: Parser a -> Parser [a]
+many p = many1 p +++ return []
 
 
 many1 :: Parser a -> Parser [a]
 many1 p = do
   v  <- p
-  vs <- many' p
+  vs <- many p
   return (v:vs)
 
 
@@ -116,6 +113,6 @@ lists :: Parser String
 lists = do
   void $ char '['
   x  <- digit
-  xs <- many' $ char ',' >> digit
+  xs <- many $ char ',' >> digit
   void $ char ']'
   return (x:xs)

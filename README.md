@@ -100,14 +100,14 @@ char c = sat (c ==)
 `many1`. Apply a parser one or more times
 
 ```haskell
-many' :: Parser a -> Parser [a]
-many' p = many1 p +++ return []
+many :: Parser a -> Parser [a]
+many p = many1 p +++ return []
 
 
 many1 :: Parser a -> Parser [a]
 many1 p = do
   v  <- p
-  vs <- many' p
+  vs <- many p
   return (v:vs)
 ```
 
