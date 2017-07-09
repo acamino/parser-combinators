@@ -1,4 +1,4 @@
-<img src="https://dl.dropboxusercontent.com/s/1ihq4owuftighi3/parsers-combinators.png" alt="Parser Combinators" />
+![Parser Combinators](https://dl.dropboxusercontent.com/s/1ihq4owuftighi3/parsers-combinators.png)
 
 # Monadic Parser Combinators
 [![Build Status](https://travis-ci.org/acamino/parser-combinators.svg?branch=master)](https://travis-ci.org/acamino/parser-combinators)
